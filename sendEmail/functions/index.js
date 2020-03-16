@@ -645,28 +645,23 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
                                                 <th style="font-size: 12px; color: #fff; padding: 10px; text-align: right;">
                                                     SubTotal</th>
                                             </tr>
-                                            <tr style="border-bottom: 1px solid #9dca9d;">
-                                                <td style="font-size: 12px; padding: 10px;">
-                                                    3 Days
-                                                </td>
-                                                <td style="font-size: 12px; padding: 10px;">
-                                                    3
-                                                </td>
-                                                <td style="font-size: 12px; padding: 10px; text-align: right;">
-                                                    40.00 SR
-                                                </td>
-                                            </tr>
-                                            <tr style="border-bottom: 1px solid #9dca9d;">
-                                                <td style="font-size: 12px; padding: 10px;">
-                                                    1 Day
-                                                </td>
-                                                <td style="font-size: 12px; padding: 10px;">
-                                                    1
-                                                </td>
-                                                <td style="font-size: 12px; padding: 10px; text-align: right;">
-                                                    10.00 SR
-                                                </td>
-                                            </tr>
+                                            `;
+    body.line_item.map(e => {
+      pdfTemplate += `
+        <tr style="border-bottom: 1px solid #9dca9d;">
+            <td style="font-size: 12px; padding: 10px;">
+                ${e.variant_title}
+            </td>
+            <td style="font-size: 12px; padding: 10px;">
+                ${e.quantity}
+            </td>
+            <td style="font-size: 12px; padding: 10px; text-align: right;">
+                ${e.price * e.quantity} SR
+            </td>
+        </tr>`;
+    });
+
+    pdfTemplate += `
                                         </tbody>
                                     </table>
                                 </div>
