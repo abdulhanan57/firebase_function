@@ -1005,7 +1005,7 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
                         </div>
         
                         <div class="item">
-                            <img src="https://cdn.shopify.com/s/files/1/0323/7711/0587/files/bar-code.jpg?v=1584200049" alt="bar code">
+                            <img id="barcode" src="http://tools.workify.xyz/api/barcode.php?text=${body.order_id}"/>
                         </div>
         
                     </div>
