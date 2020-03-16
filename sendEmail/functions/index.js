@@ -1055,6 +1055,7 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
           var page = await browser.newPage();
           console.log(pdfTemplate);
           await page.setContent(pdfTemplate);
+          await page.waitFor(3000);
           await page.emulateMedia("screen");
           console.log("/////after pdf generation");
           await page.pdf({
