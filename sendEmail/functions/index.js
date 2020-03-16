@@ -6,6 +6,7 @@ const cors = require('cors')({ origin: true });
 const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
 var qrcode = require('qrcode-generator');
+const axios = require('axios');
 
 // const fs = require("fs");
 
@@ -23,7 +24,7 @@ let transporter = nodemailer.createTransport({
     pass: 'armyraw362'
   }
 });
-exports.sendMail = functions.https.onRequest(async (req, res) => {
+exports.sendMailZyara = functions.https.onRequest(async (req, res) => {
   const body = req.body;
   console.log(body);
 
@@ -84,6 +85,14 @@ exports.sendMail = functions.https.onRequest(async (req, res) => {
   // console.log("after function called", result);
   //   });
 });
+
+async function getBase64(img) {
+  let image = await axios.get(img, {
+    responseType: 'arraybuffer'
+  });
+  return 'data:image/png;base64,' + Buffer.from(image.data).toString('base64');
+}
+
 function CreateVoucher(dest, body, date, lang, no_products, vendors, sku) {
   return new Promise(async (resolve_, reject_) => {
     const browser = await puppeteer.launch({
@@ -274,15 +283,15 @@ function CreateVoucher(dest, body, date, lang, no_products, vendors, sku) {
                                                             <div>
                                                                 <label for="">Agent Name</label>
                                                                 <input type="text" value="${
-                                                                  body
-                                                                    .billing_address
-                                                                    .first_name
+                                                                  body.email
                                                                 }">
                                                             </div>
                                                             <div>
                                                                 <label for="">Representative Name</label>
                                                                 <input type="text" value="${
-                                                                  body.email
+                                                                  body
+                                                                    .billing_address
+                                                                    .first_name
                                                                 }">
                                                             </div>
                                                             <div>
@@ -361,7 +370,7 @@ function CreateVoucher(dest, body, date, lang, no_products, vendors, sku) {
                                                                             <div class="d-flex">
                                                                                 <p>Total Amount</p>
                                                                                 <input type="text" value="${
-                                                                                  body.subtotal_price
+                                                                                  body.total_price
                                                                                 }">
                                                                             </div>
             
@@ -624,7 +633,7 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
                                                            text-align: right;">
                                                                 <p style="color: #519850; font-size: 18px; font-weight: bold;">Total Amount</p>
                                                                 <input style="text-align: right;
-                                                                align-self: flex-end; color: #519850; font-size: 16px; font-weight: bold;" type="text" value="${body.subtotal_price} SR">
+                                                                align-self: flex-end; color: #519850; font-size: 16px; font-weight: bold;" type="text" value="${body.total_price} SR">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -646,7 +655,8 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
                                                     SubTotal</th>
                                             </tr>
                                             `;
-    body.line_item.map(e => {
+
+    body.line_items.map(e => {
       pdfTemplate += `
         <tr style="border-bottom: 1px solid #9dca9d;">
             <td style="font-size: 12px; padding: 10px;">
@@ -690,7 +700,9 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
                                                                     SubTotal
                                                                 </td>
                                                                 <td style="font-size: 12px; text-align: right; padding-top: 10px; font-weight: bold;">
-                                                                    50.00 SR
+                                                                    ${
+                                                                      body.subtotal_price
+                                                                    } SR
                                                                 </td>
                                                             </tr>
                                                             <tr>
@@ -698,7 +710,11 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
                                                                     Shipping
                                                                 </td>
                                                                 <td style="font-size: 12px; text-align: right; padding-top: 10px; font-weight: bold;">
-                                                                    0.00 SR
+                                                                    ${
+                                                                      body.shipping_rate
+                                                                        ? body.shipping_rate
+                                                                        : 0
+                                                                    } SR
                                                                 </td>
                                                             </tr>
                                                             <tr>
@@ -706,7 +722,9 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
                                                                     Taxes
                                                                 </td>
                                                                 <td style="font-size: 12px; text-align: right; padding: 10px 0px; font-weight: bold;">
-                                                                    0.00 SR
+                                                                    ${
+                                                                      body.total_tax
+                                                                    } SR
                                                                 </td>
                                                             </tr>
                                                             <tr style="background: #519850;
@@ -715,7 +733,9 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
                                                                     Total
                                                                 </td>
                                                                 <td style="font-size: 12px; text-align: right; padding: 10px;">
-                                                                    50.00 SR
+                                                                    ${
+                                                                      body.total_price
+                                                                    } SR
                                                                 </td>
                                                             </tr>
                                                         </tbody>
@@ -1000,7 +1020,7 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
                         </div>
         
                         <div class="item">
-                            <img src="https://cdn.shopify.com/s/files/1/0323/7711/0587/files/bar-code.jpg?v=1584200049" alt="bar code">
+                            <img id="barcode" src="http://tools.workify.xyz/api/barcode.php?text=${body.order_id}"/>
                         </div>
         
                     </div>
@@ -1050,6 +1070,7 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
           var page = await browser.newPage();
           console.log(pdfTemplate);
           await page.setContent(pdfTemplate);
+          //   await page.waitFor(10000);
           await page.emulateMedia('screen');
           console.log('/////after pdf generation');
           await page.pdf({
