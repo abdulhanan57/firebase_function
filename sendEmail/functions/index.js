@@ -1,11 +1,11 @@
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-const nodemailer = require('nodemailer');
-const { Storage } = require('@google-cloud/storage');
-const cors = require('cors')({ origin: true });
-const puppeteer = require('puppeteer');
-const fs = require('fs-extra');
-var qrcode = require('qrcode-generator');
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+const nodemailer = require("nodemailer");
+const { Storage } = require("@google-cloud/storage");
+const cors = require("cors")({ origin: true });
+const puppeteer = require("puppeteer");
+const fs = require("fs-extra");
+var qrcode = require("qrcode-generator");
 
 // const fs = require("fs");
 
@@ -13,30 +13,30 @@ var qrcode = require('qrcode-generator');
  * Here we're using Gmail to send
  */
 const storage = new Storage({
-  projectId: 'zyara-b2b'
+  projectId: "zyara-b2b"
 });
-const bucket = storage.bucket('gs://zyara-b2b.appspot.com');
+const bucket = storage.bucket("gs://zyara-b2b.appspot.com");
 let transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
-    user: 'hanan@shopdev.co',
-    pass: 'armyraw362'
+    user: "hanan@shopdev.co",
+    pass: "armyraw362"
   }
 });
 exports.sendMail = functions.https.onRequest(async (req, res) => {
-  const body = req.body;
+  const body = JSON.parse(req.body);
   console.log(body);
 
   console.log(body.email);
-  var no_products = '';
+  var no_products = "";
   var i;
-  var vendors = '';
-  var sku = '';
+  var vendors = "";
+  var sku = "";
   var lang = body.customer_locale;
-  if (lang === 'en') {
-    lang = 'English';
+  if (lang === "en") {
+    lang = "English";
   } else {
-    lang = 'Arabic';
+    lang = "Arabic";
   }
   const date = new Date(body.created_at).toDateString();
   console.log(date);
@@ -44,12 +44,12 @@ exports.sendMail = functions.https.onRequest(async (req, res) => {
   //   return;
   const dest = body.email;
 
-  if (body.line_items[0].vendor === 'ZYARA B2B') {
+  if (body.line_items[0].vendor === "ZYARA B2B") {
     CreateVoucher(dest, body, date, lang, no_products, vendors, sku)
       .then(result => {
-        console.log('result from sending the email: ', result);
+        console.log("result from sending the email: ", result);
         if (result.hasError) {
-          console.log('there was an error while sending email: ', result.error);
+          console.log("there was an error while sending email: ", result.error);
           res.sendStatus(400);
         } else {
           res.sendStatus(200);
@@ -64,9 +64,9 @@ exports.sendMail = functions.https.onRequest(async (req, res) => {
   } else {
     CreatePdf(dest, body, date, lang, no_products, vendors, sku)
       .then(result => {
-        console.log('result from sending the email: ', result);
+        console.log("result from sending the email: ", result);
         if (result.hasError) {
-          console.log('there was an error while sending email: ', result.error);
+          console.log("there was an error while sending email: ", result.error);
           res.sendStatus(400);
         } else {
           res.sendStatus(200);
@@ -87,12 +87,12 @@ exports.sendMail = functions.https.onRequest(async (req, res) => {
 function CreateVoucher(dest, body, date, lang, no_products, vendors, sku) {
   return new Promise(async (resolve_, reject_) => {
     const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
-    console.log('////////before pdf generation');
+    console.log("////////before pdf generation");
     let filepath = {};
-    filepath.path = '/tmp/' + body.order_id + '.pdf';
-    var pdfTemplate = '';
+    filepath.path = "/tmp/" + body.order_id + ".pdf";
+    var pdfTemplate = "";
     let promises = [];
     let filepaths = [];
     for (let line_item_index in body.line_items) {
@@ -396,7 +396,7 @@ function CreateVoucher(dest, body, date, lang, no_products, vendors, sku) {
                 ${
                   line_item_index !== body.line_items.lenght - 1
                     ? `<p style="page-break-before: always"></p>`
-                    : ''
+                    : ""
                 }
             </body>
             
@@ -408,22 +408,22 @@ function CreateVoucher(dest, body, date, lang, no_products, vendors, sku) {
     }
     Promise.all(promises)
       .then(async filepaths => {
-        console.log('///////filepaths');
+        console.log("///////filepaths");
         console.log(filepaths);
-        console.log('in function');
+        console.log("in function");
         try {
           var page = await browser.newPage();
           console.log(pdfTemplate);
           await page.setContent(pdfTemplate);
-          await page.emulateMedia('screen');
-          console.log('/////after pdf generation');
+          await page.emulateMedia("screen");
+          console.log("/////after pdf generation");
           await page.pdf({
             path: filepaths[0].path,
-            format: 'A4',
+            format: "A4",
             printBackground: true
           });
           await browser.close();
-          console.log('done');
+          console.log("done");
           let resp = await sendemail(body.email, filepaths);
           //process.exit();
           // res.sendStatus(200);
@@ -434,7 +434,7 @@ function CreateVoucher(dest, body, date, lang, no_products, vendors, sku) {
           });
           return;
         } catch (e) {
-          console.log('error', e);
+          console.log("error", e);
           reject_(new Error(e));
 
           return;
@@ -449,11 +449,11 @@ function CreateVoucher(dest, body, date, lang, no_products, vendors, sku) {
 function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
   return new Promise(async (resolve_, reject_) => {
     const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
-    console.log('////////before pdf generation');
+    console.log("////////before pdf generation");
     let filepath = {};
-    filepath.path = '/tmp/' + body.order_id + '.pdf';
+    filepath.path = "/tmp/" + body.order_id + ".pdf";
     var pdfTemplate = `<!doctype html>
     <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
     
@@ -747,17 +747,17 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
       promises.push(
         new Promise(async (resolve, reject) => {
           var typeNumber = 4;
-          var errorCorrectionLevel = 'L';
+          var errorCorrectionLevel = "L";
           var qr = qrcode(typeNumber, errorCorrectionLevel);
           qr.addData(
             body.order_id +
-              ',' +
+              "," +
               line_item.title +
-              ',' +
+              "," +
               body.billing_address.first_name +
-              ' ' +
+              " " +
               body.billing_address.first_name +
-              ',' +
+              "," +
               body.billing_address.phone
           );
           qr.make();
@@ -1048,22 +1048,22 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
     }
     Promise.all(promises)
       .then(async filepaths => {
-        console.log('///////filepaths');
+        console.log("///////filepaths");
         console.log(filepaths);
-        console.log('in function');
+        console.log("in function");
         try {
           var page = await browser.newPage();
           console.log(pdfTemplate);
           await page.setContent(pdfTemplate);
-          await page.emulateMedia('screen');
-          console.log('/////after pdf generation');
+          await page.emulateMedia("screen");
+          console.log("/////after pdf generation");
           await page.pdf({
             path: filepaths[0].path,
-            format: 'A4',
+            format: "A4",
             printBackground: true
           });
           await browser.close();
-          console.log('done');
+          console.log("done");
           let resp = await sendemail(body.email, filepaths);
           //process.exit();
           // res.sendStatus(200);
@@ -1074,7 +1074,7 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
           });
           return;
         } catch (e) {
-          console.log('error', e);
+          console.log("error", e);
           reject_(new Error(e));
 
           return;
@@ -1088,11 +1088,11 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
 }
 
 async function sendemail(dest, filepaths) {
-  console.log('Sent to:', dest);
+  console.log("Sent to:", dest);
   const mailOptions = {
-    from: 'Hanan Butt <hanan@shopdev.co>', // Something like: Jane Doe <janedoe@gmail.com>
+    from: "Hanan Butt <hanan@shopdev.co>", // Something like: Jane Doe <janedoe@gmail.com>
     to: dest,
-    subject: 'Test subject', // email subject
+    subject: "Test subject", // email subject
     attachments: filepaths
   };
 
@@ -1109,7 +1109,7 @@ async function sendemail(dest, filepaths) {
       //   return res.send("Sended");
       resolve({
         hasError: false,
-        response: 'success'
+        response: "success"
       });
     });
   });
