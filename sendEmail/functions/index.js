@@ -274,15 +274,15 @@ function CreateVoucher(dest, body, date, lang, no_products, vendors, sku) {
                                                             <div>
                                                                 <label for="">Agent Name</label>
                                                                 <input type="text" value="${
-                                                                  body
-                                                                    .billing_address
-                                                                    .first_name
+                                                                  body.email
                                                                 }">
                                                             </div>
                                                             <div>
                                                                 <label for="">Representative Name</label>
                                                                 <input type="text" value="${
-                                                                  body.email
+                                                                  body
+                                                                    .billing_address
+                                                                    .first_name
                                                                 }">
                                                             </div>
                                                             <div>
@@ -361,7 +361,7 @@ function CreateVoucher(dest, body, date, lang, no_products, vendors, sku) {
                                                                             <div class="d-flex">
                                                                                 <p>Total Amount</p>
                                                                                 <input type="text" value="${
-                                                                                  body.subtotal_price
+                                                                                  line_item.line_price
                                                                                 }">
                                                                             </div>
             
