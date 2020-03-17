@@ -25,7 +25,13 @@ let transporter = nodemailer.createTransport({
   }
 });
 exports.sendMailZyara = functions.https.onRequest(async (req, res) => {
-  const body = req.body;
+  let body;
+  try {
+    body = JSON.parse(req.body);
+  } catch (err) {
+    body = req.body;
+  }
+
   console.log(body);
 
   console.log(body.email);
@@ -681,16 +687,7 @@ function CreatePdf(dest, body, date, lang, no_products, vendors, sku) {
                                         <tbody>
                                             <tr class="d-flex">
                                                 <td>
-                                                    <div style=" font-size: 14px; font-weight: 500; margin-top: 10px;">
-                                                        <span style="color: #519850; font-size: 14px; font-weight: 500; margin-top: 10px;">
-                                                            Payment Method</span>
-                                                    </div>
-                                                    <div style=" font-size: 14px; font-weight: 500; margin-top: 10px;">
-                                                        <span style="color: #606060; font-size: 14px; font-weight: 500; margin-top: 10px;">
-                                                            Pay via Wallet</span> --
-                                                        <span style="color: #606060; font-size: 14px; font-weight: 500; margin-top: 10px; font-weight: bold;">
-                                                            50.00 SR</span>
-                                                    </div>
+                                                    
                                                 </td>
                                                 <td>
                                                     <table style="width: 100%;">
